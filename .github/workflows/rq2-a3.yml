@@ -1,0 +1,31 @@
+name: RQ2 A3 controlled proof
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  issues: read
+  pull-requests: read
+
+jobs:
+  controlled-marker:
+    if: >-
+      github.event.issue.pull_request &&
+      github.event.comment.body == '/rq2-run' &&
+      contains(github.event.issue.labels.*.name, 'rq2-authorized')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve and checkout the mutable PR head after authorization
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.issue.number }}/head
+      - name: Execute constrained benign marker payload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RQ2_FAMILY: A3
+          RQ2_MARKER: a3-${{ github.event.issue.number }}-${{ github.run_id }}
+          GITHUB_DEFAULT_BRANCH: main
+        run: bash .rq2/payload.sh
+
